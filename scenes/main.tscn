@@ -1,9 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=4 format=3 uid="uid://f3j6pq47rjkq"]
 
 [ext_resource type="Material" uid="uid://dvm1rob5rkjdb" path="res://materials/bubble_material.material" id="1_2f7vv"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_xdfes"]
 material = ExtResource("1_2f7vv")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_t1vsv"]
 
 [node name="Main" type="Node3D"]
 
@@ -18,8 +20,9 @@ transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0, 0, 0)
 mesh = SubResource("SphereMesh_xdfes")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Bubble01"]
+shape = SubResource("SphereShape3D_t1vsv")
 
 [node name="Label3D" type="Label3D" parent="Bubble01"]
-text = "999"
+text = "1"
 font_size = 96
 outline_size = 0
