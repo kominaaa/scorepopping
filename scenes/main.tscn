@@ -1,11 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=3 format=3 uid="uid://f3j6pq47rjkq"]
 
-[ext_resource type="Material" uid="uid://dvm1rob5rkjdb" path="res://materials/bubble_material.material" id="1_2f7vv"]
-
-[sub_resource type="SphereMesh" id="SphereMesh_xdfes"]
-material = ExtResource("1_2f7vv")
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_t1vsv"]
+[ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble_01.tscn" id="1_nwdim"]
+[ext_resource type="Script" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
 
 [node name="Main" type="Node3D"]
 
@@ -13,16 +9,8 @@ material = ExtResource("1_2f7vv")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.18599)
 projection = 1
 
-[node name="Bubble01" type="StaticBody3D" parent="."]
-transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0, 0, 0)
+[node name="BubbleSpawner" type="Node3D" parent="."]
+script = ExtResource("2_fwp22")
+bubble_scene = ExtResource("1_nwdim")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Bubble01"]
-mesh = SubResource("SphereMesh_xdfes")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Bubble01"]
-shape = SubResource("SphereShape3D_t1vsv")
-
-[node name="Label3D" type="Label3D" parent="Bubble01"]
-text = "1"
-font_size = 96
-outline_size = 0
+[node name="Bubble01" parent="." instance=ExtResource("1_nwdim")]
