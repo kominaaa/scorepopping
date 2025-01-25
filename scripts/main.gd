@@ -5,9 +5,7 @@ extends Node3D
 @export var best_score_label: Label  # Label pour afficher le meilleur score
 @export var game_over_label: Label
 @export var timer_value_label: Label  # Label pour afficher le temps restant
-@export var initial_time: float = 30.0  # Temps initial en secondes avec des décimales
-@export var bonus_threshold: int = 500  # Valeur du score à partir de laquelle on gagne du temps
-@export var bonus_time_per_threshold: float = 1.0  # Temps bonus ajouté pour chaque seuil atteint
+@export var initial_time: float = 45.0  # Temps initial en secondes avec des décimales
 
 var score: int = 0
 var game_over: bool = false
@@ -26,7 +24,7 @@ func _ready():
 	
 	# Afficher le meilleur score actuel
 	if best_score_label:
-		best_score_label.text = "Best: %d" % ScoreManager.get_best_score()
+		best_score_label.text = "%d" % ScoreManager.get_best_score()
 	
 	# Cacher le label "Game Over" au début
 	if game_over_label:

@@ -7,7 +7,7 @@ func _ready():
 	audio_player = AudioStreamPlayer.new()
 	add_child(audio_player)
 	
-	var audio_stream = preload("res://sounds/music_loop_01.mp3")
+	var audio_stream = preload("res://sounds/music_loop_02.mp3")
 	if audio_stream is AudioStream:
 		audio_stream.loop = true
 	
