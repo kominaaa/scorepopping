@@ -8,9 +8,9 @@ extends Node3D
 @export var label_3d: Label3D
 @export var bubble_mesh: MeshInstance3D
 @export var explosion_scene: PackedScene
-@export var static_body: StaticBody3D  # Le StaticBody3D pour les clics
+@export var static_body: StaticBody3D
 
-signal bubble_destroyed(bubble: Node3D)  # Signal pour notifier le spawner
+signal bubble_destroyed(bubble: Node3D)
 
 func _ready():
 	scale = Vector3(1, 1, 1)
@@ -46,10 +46,12 @@ func _update_label_and_colors():
 			material.set_shader_parameter("fresnel_color", color)
 
 func _on_bubble_clicked(impact_pos: Vector3) -> void:
-	# Instancier l'explosion
 	if explosion_scene:
+		# Instancier la scène d'explosion
 		var explosion = explosion_scene.instantiate()
-		explosion.global_transform.origin = impact_pos
+
+		# Placer l'explosion à l'origine de la bulle
+		explosion.global_transform.origin = self.global_transform.origin
 		get_tree().current_scene.add_child(explosion)
 
 	# Déconnecter le signal pour éviter des erreurs
