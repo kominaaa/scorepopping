@@ -16,6 +16,7 @@ signal progress_updated(progress: float)  # Signal pour transmettre le progress
 @export var collision_shape: CollisionShape3D
 
 var current_progress: float = 0.0
+var current_value: int = 0  # Nouvelle variable pour stocker la valeur actuelle
 
 func _ready():
 	scale = Vector3(1, 1, 1)
@@ -42,17 +43,19 @@ func _process(delta):
 
 func _update_label_and_colors():
 	# Calcul du progress entre 0 et 1
-	var progress = (scale.x - 1.0) / (max_scale - 1.0)
-	current_progress = progress
+	current_progress = (scale.x - 1.0) / (max_scale - 1.0)
+
+	# Calcul de la valeur actuelle
+	current_value = round(lerp(float(min_value), float(max_value), current_progress))
 
 	# Émettre le signal pour l'éventuel usage externe (spawn script, etc.)
-	emit_signal("progress_updated", progress)
+	emit_signal("progress_updated", current_progress)
 
 	# Mise à jour du label
-	label_3d.text = str(round(lerp(float(min_value), float(max_value), progress)))
+	label_3d.text = str(current_value)
 
 	# Couleur via le gradient
-	var color = gradient_texture.gradient.get_color(progress)
+	var color = gradient_texture.gradient.get_color(current_progress)
 	label_3d.modulate = color
 
 	# Changer la couleur dans le ShaderMaterial, si c'est un SphereMesh
