@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://cjfx7vcbemlqa"]
 
-[ext_resource type="Script" path="res://scripts/pop_particles.gd" id="1_1171a"]
-[ext_resource type="AudioStream" uid="uid://nttrqjj0tw83" path="res://sounds/pop.wav" id="2_7j6yd"]
+[ext_resource type="Script" path="res://scripts/pop_particles.gd" id="1_0o8rm"]
+[ext_resource type="AudioStream" uid="uid://nttrqjj0tw83" path="res://audio/pop.wav" id="2_ewnaj"]
 
 [sub_resource type="Curve" id="Curve_ptyhd"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -2.75962, 0.0, 0, 0]
@@ -31,7 +31,7 @@ radial_segments = 4
 rings = 4
 
 [node name="Pop_particle" type="Node3D" node_paths=PackedStringArray("particles", "pop_sound")]
-script = ExtResource("1_1171a")
+script = ExtResource("1_0o8rm")
 particles = NodePath("GPUParticles3D")
 pop_sound = NodePath("PopAudioStreamPlayer")
 
@@ -45,5 +45,5 @@ process_material = SubResource("ParticleProcessMaterial_njt2l")
 draw_pass_1 = SubResource("SphereMesh_xjomd")
 
 [node name="PopAudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("2_7j6yd")
+stream = ExtResource("2_ewnaj")
 volume_db = -10.0

@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://dm3ai0roexvim"
-path="res://.godot/imported/end_pop.wav-00bbeb83976935d9a08ff4ad868678f8.sample"
+path="res://.godot/imported/game_over_pop.wav-b853739e6a255a05ce4e30cfc0c5f634.sample"
 
 [deps]
 
-source_file="res://sounds/end_pop.wav"
-dest_files=["res://.godot/imported/end_pop.wav-00bbeb83976935d9a08ff4ad868678f8.sample"]
+source_file="res://audio/game_over_pop.wav"
+dest_files=["res://.godot/imported/game_over_pop.wav-b853739e6a255a05ce4e30cfc0c5f634.sample"]
 
 [params]
 

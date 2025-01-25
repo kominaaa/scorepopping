@@ -16,9 +16,9 @@ config/features=PackedStringArray("4.3", "GL Compatibility")
 
 [autoload]
 
-MusicManager="*res://scripts/music_manager.gd"
-Config="*res://scripts/Config.gd"
-ScoreManager="*res://scripts/score_manager.gd"
+MusicManager="*res://scripts/autoloads/music_manager.gd"
+Config="*res://scripts/autoloads/config.gd"
+ScoreManager="*res://scripts/autoloads/score_manager.gd"
 
 [display]
 
@@ -32,10 +32,10 @@ window/stretch/aspect="keep_height"
 
 folder_colors={
 "res://assets/": "orange",
+"res://audio/": "yellow",
 "res://materials/": "green",
 "res://scenes/": "blue",
-"res://scripts/": "red",
-"res://sounds/": "yellow"
+"res://scripts/": "red"
 }
 
 [rendering]

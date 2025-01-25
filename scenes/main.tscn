@@ -1,11 +1,11 @@
 [gd_scene load_steps=21 format=4 uid="uid://f3j6pq47rjkq"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_mnu6u"]
-[ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble_01.tscn" id="1_nwdim"]
+[ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble.tscn" id="1_nwdim"]
 [ext_resource type="Script" path="res://scripts/logo_anim.gd" id="2_0akuw"]
 [ext_resource type="Script" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
 [ext_resource type="PackedScene" uid="uid://wejovet6gbnc" path="res://scenes/game_interface.tscn" id="4_yko0o"]
-[ext_resource type="AudioStream" uid="uid://dm3ai0roexvim" path="res://sounds/end_pop.wav" id="5_a5248"]
+[ext_resource type="AudioStream" uid="uid://dm3ai0roexvim" path="res://audio/game_over_pop.wav" id="5_a5248"]
 [ext_resource type="Script" path="res://scripts/cursor.gd" id="7_ri2c5"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l3l8t"]
