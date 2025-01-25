@@ -18,8 +18,14 @@ background_mode = 2
 sky = SubResource("Sky_hpll1")
 tonemap_mode = 2
 
-[node name="Main" type="Node3D"]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("camera")]
 script = ExtResource("1_mnu6u")
+camera = NodePath("Camera3D")
+bubble_scene = ExtResource("1_nwdim")
+
+[node name="BubbleSpawner" type="Node3D" parent="."]
+script = ExtResource("2_fwp22")
+bubble_scene = ExtResource("1_nwdim")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jyda7")
@@ -31,7 +37,3 @@ shadow_enabled = true
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.18599)
 projection = 1
-
-[node name="BubbleSpawner" type="Node3D" parent="."]
-script = ExtResource("2_fwp22")
-bubble_scene = ExtResource("1_nwdim")
