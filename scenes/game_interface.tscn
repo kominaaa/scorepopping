@@ -4,9 +4,13 @@
 
 [sub_resource type="LabelSettings" id="LabelSettings_hsfxb"]
 font_size = 52
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_infcm"]
 font_size = 52
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
 
 [node name="GameInterface" type="Control"]
 layout_mode = 3
@@ -38,7 +42,6 @@ label_settings = SubResource("LabelSettings_hsfxb")
 horizontal_alignment = 1
 
 [node name="GameOverLabel" type="Label" parent="."]
-visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -51,5 +54,6 @@ offset_right = 359.5
 offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "Game Over ! Click to restart !"
+text = "Game Over"
 label_settings = SubResource("LabelSettings_infcm")
+horizontal_alignment = 1

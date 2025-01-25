@@ -19,10 +19,11 @@ background_mode = 2
 sky = SubResource("Sky_hpll1")
 tonemap_mode = 2
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "game_over_label")]
 script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
 score_value_label = NodePath("CanvasLayer/GameInterface/ScoreLabel/ScoreValueLabel")
+game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -45,5 +46,3 @@ shadow_enabled = true
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.18599)
 projection = 1
-
-[editable path="CanvasLayer/GameInterface"]

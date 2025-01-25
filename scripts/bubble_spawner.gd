@@ -9,6 +9,8 @@ extends Node3D
 @export var max_spawn_attempts: int = 50
 @export var max_spawns: int = 60
 
+@onready var main_scene = get_tree().get_current_scene()
+
 var spawn_timer: Timer
 var bubbles: Array = []
 var current_spawn_count: int = 0
@@ -115,9 +117,12 @@ func _on_bubble_destroyed(bubble: Node3D, bubble_value: int) -> void:
 	if main_scene and main_scene.has_method("increment_score"):
 		main_scene.increment_score(bubble_value)
 
+	# Vérifiez si toutes les bulles ont été poppées
+	if bubbles.is_empty() and current_spawn_count >= max_spawns:
+		main_scene.end_game()
+
 func _on_bubble_collision():
-	print("Collision detected! Restarting game...")
-	_restart_game()
+	main_scene.end_game()
 
 func _check_collisions():
 	for i in range(bubbles.size()):
