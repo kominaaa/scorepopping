@@ -7,9 +7,11 @@ extends Node3D
 @export var z_position: float = 0.0
 @export var min_spawn_distance: float = 0.2
 @export var max_spawn_attempts: int = 50
+@export var max_spawns: int = 60
 
 var spawn_timer: Timer
 var bubbles: Array = []
+var current_spawn_count: int = 0
 
 func _ready():
 	# Créer un timer pour gérer le spawn
@@ -30,6 +32,11 @@ func _process(delta: float):
 	_check_collisions()
 
 func _spawn_bubble(at_random: bool = false):
+	if current_spawn_count >= max_spawns:
+		print("Maximum number of spawns reached. Stopping spawner.")
+		spawn_timer.stop()
+		return
+
 	_cleanup_bubbles()
 
 	var spawn_pos: Vector3
@@ -66,6 +73,9 @@ func _spawn_bubble(at_random: bool = false):
 
 		# Ajouter la bulle à la liste
 		bubbles.append(bubble)
+
+		# Incrémenter le compteur
+		current_spawn_count += 1
 	else:
 		print("No valid position found for spawning a bubble.")
 
