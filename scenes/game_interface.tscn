@@ -1,0 +1,78 @@
+[gd_scene load_steps=5 format=3 uid="uid://wejovet6gbnc"]
+
+[ext_resource type="LabelSettings" uid="uid://ch0dgyft6pqrm" path="res://materials/interface_label_settings.tres" id="1_fu1yt"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_hsfxb"]
+font_size = 52
+
+[sub_resource type="LabelSettings" id="LabelSettings_yde63"]
+font_size = 52
+
+[sub_resource type="LabelSettings" id="LabelSettings_infcm"]
+font_size = 52
+
+[node name="GameInterface" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScoreLabel" type="Label" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Current Score : "
+label_settings = ExtResource("1_fu1yt")
+
+[node name="ScoreValueLabel" type="Label" parent="ScoreLabel"]
+layout_mode = 0
+offset_top = 47.0
+offset_right = 238.0
+offset_bottom = 92.0
+text = "100 000"
+label_settings = SubResource("LabelSettings_hsfxb")
+horizontal_alignment = 1
+
+[node name="BubblesLeftLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 23.0
+grow_horizontal = 0
+text = "Bubbles Left :"
+label_settings = ExtResource("1_fu1yt")
+
+[node name="BubblesLeftValueLabel" type="Label" parent="BubblesLeftLabel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -211.0
+offset_top = 44.0
+offset_right = -1.0
+offset_bottom = 89.0
+grow_horizontal = 0
+text = "60"
+label_settings = SubResource("LabelSettings_yde63")
+horizontal_alignment = 1
+
+[node name="GameOverLabel" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -359.5
+offset_top = -36.0
+offset_right = 359.5
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Game Over ! Click to restart !"
+label_settings = SubResource("LabelSettings_infcm")

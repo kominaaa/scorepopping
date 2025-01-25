@@ -9,7 +9,7 @@ func set_progress(progress: float) -> void:
 	# Calculer les valeurs interpolées
 	var shape_scale = lerp(0.01, 0.5, progress)  # Taille des axes des particules
 	var particle_amount = int(lerp(50, 500, progress))  # Nombre de particules
-	var pitch_scale = lerp(2.0, 0.5, progress)  # Pitch du son
+	var pitch_scale = lerp(2.0, 0.8, progress)  # Pitch du son
 	print("Progress:", progress)
 
 	# Ajuster les particules
@@ -17,7 +17,6 @@ func set_progress(progress: float) -> void:
 		particles.amount = particle_amount
 		print("Particle amount set to:", particle_amount)
 
-		# Vérifier si le matériau est un ParticleProcessMaterial
 		if particles.process_material is ParticleProcessMaterial:
 			var material = particles.process_material as ParticleProcessMaterial
 			material.emission_shape_scale = Vector3(shape_scale, shape_scale, shape_scale)
@@ -39,25 +38,25 @@ func set_progress(progress: float) -> void:
 
 func _on_progress_updated(progress: float) -> void:
 	print("Progress updated signal received:", progress)
-	# Ajoutez ici des comportements supplémentaires si nécessaire
 
-func _ready():
-	# Connecter le signal interne si tu en as besoin
+func _ready() -> void:
+	# Connecter le signal interne si besoin
 	self.progress_updated.connect(Callable(self, "_on_progress_updated"))
 
-	# Démarrer les particules
+	# Démarrer les particules si nécessaire
 	if particles and not particles.emitting:
 		particles.emitting = true
 
-	# Jouer le son de pop
+	# --- Volume aléatoire entre -20 et -10 dB ---
 	if pop_sound:
+		pop_sound.volume_db = randf_range(-20.0, -10.0)
 		pop_sound.play()
 
-	# Créer un Timer pour supprimer ce Node après la durée de vie des particules
+	# Créer un Timer pour supprimer ce Node quand la durée de vie est atteinte
 	if particles:
 		var timer = Timer.new()
 		timer.one_shot = true
-		timer.wait_time = particles.lifetime  # Durée de vie définie dans l'éditeur
+		timer.wait_time = particles.lifetime  # Durée de vie paramétrée
 		timer.timeout.connect(queue_free)
 		add_child(timer)
 		timer.start()

@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=8 format=3 uid="uid://f3j6pq47rjkq"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_mnu6u"]
 [ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble_01.tscn" id="1_nwdim"]
 [ext_resource type="Script" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
+[ext_resource type="PackedScene" uid="uid://wejovet6gbnc" path="res://scenes/game_interface.tscn" id="4_yko0o"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_nsgbv"]
 sky_top_color = Color(0.21053, 0.577765, 0.863089, 1)
@@ -23,9 +24,16 @@ script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
 bubble_scene = ExtResource("1_nwdim")
 
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="GameInterface" parent="CanvasLayer" instance=ExtResource("4_yko0o")]
+mouse_filter = 2
+
 [node name="BubbleSpawner" type="Node3D" parent="."]
 script = ExtResource("2_fwp22")
 bubble_scene = ExtResource("1_nwdim")
+
+[node name="ScoreManager" type="Node3D" parent="."]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jyda7")
