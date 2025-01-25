@@ -20,6 +20,7 @@ sky = SubResource("Sky_hpll1")
 tonemap_mode = 2
 
 [node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "game_over_label")]
+process_mode = 3
 script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
 score_value_label = NodePath("CanvasLayer/GameInterface/ScoreLabel/ScoreValueLabel")
@@ -31,6 +32,7 @@ game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
 mouse_filter = 2
 
 [node name="BubbleSpawner" type="Node3D" parent="."]
+process_mode = 1
 script = ExtResource("2_fwp22")
 bubble_scene = ExtResource("1_nwdim")
 
@@ -44,5 +46,5 @@ transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.18599)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.34489)
 projection = 1

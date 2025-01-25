@@ -150,5 +150,4 @@ func _restart_game():
 	get_tree().change_scene_to_file(current_scene_path)
 
 func _on_progress_updated(progress: float):
-	# Callback si besoin d'exploiter le "progress" en temps réel
 	pass
