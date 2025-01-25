@@ -24,11 +24,12 @@ background_mode = 2
 sky = SubResource("Sky_hpll1")
 tonemap_mode = 2
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "game_over_label", "timer_value_label")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "best_score_label", "game_over_label", "timer_value_label")]
 process_mode = 3
 script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
 score_value_label = NodePath("CanvasLayer/GameInterface/ScoreValueLabel")
+best_score_label = NodePath("CanvasLayer/GameInterface/BestScoreLabel/BestScoreValueLabel")
 game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
 timer_value_label = NodePath("CanvasLayer/GameInterface/TimerLabel/TimerValueLabel")
 

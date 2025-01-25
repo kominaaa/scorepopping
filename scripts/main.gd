@@ -2,6 +2,7 @@ extends Node3D
 
 @export var camera: Camera3D
 @export var score_value_label: Label
+@export var best_score_label: Label  # Label pour afficher le meilleur score
 @export var game_over_label: Label
 @export var timer_value_label: Label  # Label pour afficher le temps restant
 @export var initial_time: float = 30.0  # Temps initial en secondes avec des décimales
@@ -23,6 +24,10 @@ func _ready():
 	if score_value_label:
 		score_value_label.text = str(score)
 	
+	# Afficher le meilleur score actuel
+	if best_score_label:
+		best_score_label.text = "Best: %d" % ScoreManager.get_best_score()
+	
 	# Cacher le label "Game Over" au début
 	if game_over_label:
 		game_over_label.hide()
@@ -39,6 +44,12 @@ func increment_score(value: int):
 	score += value
 	if score_value_label:
 		score_value_label.text = str(score)
+	
+	# Vérifie si le meilleur score doit être mis à jour
+	if score > ScoreManager.get_best_score():
+		ScoreManager.update_score(score)
+		if best_score_label:
+			best_score_label.text = "Best: %d" % ScoreManager.get_best_score()
 	
 	# Ajoute des secondes au timer si le score dépasse le seuil
 	var thresholds_crossed = value / Config.bonus_threshold
