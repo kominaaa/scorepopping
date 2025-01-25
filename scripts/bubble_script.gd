@@ -33,12 +33,10 @@ func _process(delta: float):
 
 		_update_label_and_colors()
 
-		# Vérifier si on a atteint la valeur max
 		if current_value >= max_value:
-			_pop_bubble()  # Auto-pop si on a atteint 999
+			_pop_bubble()
 			return
 	else:
-		# On a déjà la taille max. On peut décider ici aussi de pop la bulle
 		set_process(false)
 		_pop_bubble()
 
@@ -63,7 +61,6 @@ func _on_bubble_clicked(impact_pos: Vector3) -> void:
 
 
 func _pop_bubble() -> void:
-	# Crée l'explosion
 	if explosion_scene:
 		var explosion = explosion_scene.instantiate()
 		explosion.global_transform.origin = global_transform.origin
@@ -72,15 +69,12 @@ func _pop_bubble() -> void:
 		if explosion.has_method("set_progress"):
 			explosion.set_progress(current_progress)
 
-	# Déconnecter les signaux, si nécessaire
 	if area:
 		if area.area_entered.is_connected(_on_area_entered):
 			area.area_entered.disconnect(Callable(self, "_on_area_entered"))
 		if area.input_event.is_connected(_on_input_event):
 			area.input_event.disconnect(Callable(self, "_on_input_event"))
 
-	# Émettre le signal pour que le Main.gd puisse ajouter les points
 	emit_signal("bubble_destroyed", self, current_value)
 
-	# Détruire la bulle
 	queue_free()

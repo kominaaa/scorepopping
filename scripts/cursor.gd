@@ -13,7 +13,6 @@ func _process(delta):
 	var ray_origin: Vector3 = camera.project_ray_origin(normalized_mouse_pos * viewport_size)
 	var ray_direction: Vector3 = camera.project_ray_normal(normalized_mouse_pos * viewport_size)
 	
-	# Distance pour positionner le curseur devant la caméra
 	var distance: float = 1.0
 	var target_position: Vector3 = ray_origin + ray_direction * distance
 	
