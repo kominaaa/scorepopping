@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4c2see10di6e"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_njh6b"]
+emission_shape_scale = Vector3(0.001, 0.001, 0.001)
+emission_shape = 2
+emission_sphere_radius = 1.0
+direction = Vector3(1, 1, 1)
+spread = 180.0
+initial_velocity_max = 0.05
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bqix7"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_6u74c"]
+material = SubResource("StandardMaterial3D_bqix7")
+radius = 0.003
+height = 0.006
+radial_segments = 4
+rings = 2
+
+[node name="BubblePopGPUParticles3D" type="GPUParticles3D"]
+emitting = false
+amount = 300
+lifetime = 0.05
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_njh6b")
+draw_pass_1 = SubResource("SphereMesh_6u74c")

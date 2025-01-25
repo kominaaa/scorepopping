@@ -1,9 +1,32 @@
-[gd_scene load_steps=3 format=3 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=7 format=3 uid="uid://f3j6pq47rjkq"]
 
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_mnu6u"]
 [ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble_01.tscn" id="1_nwdim"]
 [ext_resource type="Script" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_nsgbv"]
+sky_top_color = Color(0.21053, 0.577765, 0.863089, 1)
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_bottom_color = Color(0.737113, 0.672124, 0.597547, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_hpll1"]
+sky_material = SubResource("ProceduralSkyMaterial_nsgbv")
+
+[sub_resource type="Environment" id="Environment_jyda7"]
+background_mode = 2
+sky = SubResource("Sky_hpll1")
+tonemap_mode = 2
+
 [node name="Main" type="Node3D"]
+script = ExtResource("1_mnu6u")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_jyda7")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.18599)
@@ -12,5 +35,3 @@ projection = 1
 [node name="BubbleSpawner" type="Node3D" parent="."]
 script = ExtResource("2_fwp22")
 bubble_scene = ExtResource("1_nwdim")
-
-[node name="Bubble01" parent="." instance=ExtResource("1_nwdim")]
