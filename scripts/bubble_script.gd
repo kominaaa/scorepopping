@@ -50,6 +50,13 @@ func _on_bubble_clicked(impact_pos: Vector3) -> void:
 		# Instancier la scène d'explosion
 		var explosion = explosion_scene.instantiate()
 
+		# Calculer la valeur de progress (entre 0.0 et 1.0)
+		var progress = (scale.x - 1.0) / (max_scale - 1.0)
+
+		# Passer progress à l'explosion
+		if explosion.has_method("set_progress"):
+			explosion.set_progress(progress)
+
 		# Placer l'explosion à l'origine de la bulle
 		explosion.global_transform.origin = self.global_transform.origin
 		get_tree().current_scene.add_child(explosion)
