@@ -26,28 +26,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ScoreLabel" type="Label" parent="."]
+[node name="ScoreValueLabel" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -60.0
-offset_right = 60.0
-offset_bottom = 23.0
-grow_horizontal = 2
-text = "Current Score : "
-label_settings = ExtResource("1_fu1yt")
-horizontal_alignment = 1
-
-[node name="ScoreValueLabel" type="Label" parent="ScoreLabel"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -118.0
-offset_top = 13.0
-offset_right = 120.0
-offset_bottom = 58.0
+offset_left = -119.0
+offset_top = 32.0
+offset_right = 119.0
+offset_bottom = 99.0
 grow_horizontal = 2
 text = "100 000"
 label_settings = SubResource("LabelSettings_hsfxb")
@@ -57,7 +44,7 @@ horizontal_alignment = 1
 layout_mode = 1
 offset_right = 120.0
 offset_bottom = 23.0
-text = "Previous Best : "
+text = "Meilleur Score : "
 label_settings = ExtResource("1_fu1yt")
 horizontal_alignment = 1
 
@@ -75,7 +62,39 @@ text = "1000"
 label_settings = SubResource("LabelSettings_3tk88")
 horizontal_alignment = 1
 
+[node name="TimerLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -63.0
+offset_top = -52.0
+offset_right = 58.0
+offset_bottom = -29.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Temps restant :"
+label_settings = ExtResource("1_fu1yt")
+horizontal_alignment = 1
+
+[node name="TimerValueLabel" type="Label" parent="TimerLabel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -118.0
+offset_top = 13.0
+offset_right = 120.0
+offset_bottom = 58.0
+grow_horizontal = 2
+text = "10 : 20"
+label_settings = SubResource("LabelSettings_3tk88")
+horizontal_alignment = 1
+
 [node name="GameOverLabel" type="Label" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5

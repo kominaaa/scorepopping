@@ -24,12 +24,13 @@ background_mode = 2
 sky = SubResource("Sky_hpll1")
 tonemap_mode = 2
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "game_over_label")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "game_over_label", "timer_value_label")]
 process_mode = 3
 script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
-score_value_label = NodePath("CanvasLayer/GameInterface/ScoreLabel/ScoreValueLabel")
+score_value_label = NodePath("CanvasLayer/GameInterface/ScoreValueLabel")
 game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
+timer_value_label = NodePath("CanvasLayer/GameInterface/TimerLabel/TimerValueLabel")
 
 [node name="BKG" type="Node3D" parent="."]
 
@@ -45,6 +46,27 @@ rotation_speed_y = 3.0
 
 [node name="GameInterface" parent="CanvasLayer" instance=ExtResource("4_yko0o")]
 mouse_filter = 2
+
+[node name="ScoreValueLabel" parent="CanvasLayer/GameInterface" index="0"]
+offset_top = 0.0
+offset_bottom = 67.0
+
+[node name="BestScoreLabel" parent="CanvasLayer/GameInterface" index="1"]
+text = "Meilleur Score"
+
+[node name="TimerLabel" parent="CanvasLayer/GameInterface" index="2"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -121.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 23.0
+grow_horizontal = 0
+grow_vertical = 1
+text = "Temps restant"
 
 [node name="BubbleSpawner" type="Node3D" parent="." node_paths=PackedStringArray("end_sound")]
 process_mode = 1
@@ -67,3 +89,5 @@ shadow_enabled = true
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.34489)
 projection = 1
+
+[editable path="CanvasLayer/GameInterface"]

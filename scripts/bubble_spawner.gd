@@ -7,14 +7,12 @@ extends Node3D
 @export var z_position: float = 0.0
 @export var min_spawn_distance: float = 0.2
 @export var max_spawn_attempts: int = 50
-@export var max_spawns: int = 30
 @export var end_sound: AudioStreamPlayer
 
 @onready var main_scene = get_tree().get_current_scene()
 
 var spawn_timer: Timer
 var bubbles: Array = []
-var current_spawn_count: int = 0
 
 func _ready():
 	spawn_timer = Timer.new()
@@ -24,17 +22,12 @@ func _ready():
 	add_child(spawn_timer)
 
 	_spawn_bubble(true)
-
 	spawn_timer.start()
 
 func _process(delta: float):
 	_check_collisions()
 
 func _spawn_bubble(at_random: bool = false):
-	if current_spawn_count >= max_spawns:
-		spawn_timer.stop()
-		return
-
 	_cleanup_bubbles()
 
 	var spawn_pos: Vector3
@@ -67,7 +60,6 @@ func _spawn_bubble(at_random: bool = false):
 		bubble.connect("collision_detected", Callable(self, "_on_bubble_collision"))
 
 		bubbles.append(bubble)
-		current_spawn_count += 1
 
 func _random_position() -> Vector3:
 	var x_pos = randf_range(x_range.x, x_range.y)
@@ -104,12 +96,11 @@ func _on_bubble_destroyed(bubble: Node3D, bubble_value: int) -> void:
 	if bubble in bubbles:
 		bubbles.erase(bubble)
 
-	var main_scene = get_tree().get_current_scene()
 	if main_scene and main_scene.has_method("increment_score"):
 		main_scene.increment_score(bubble_value)
 
-	if bubbles.is_empty() and current_spawn_count >= max_spawns:
-		main_scene.end_game()
+	if bubbles.is_empty():
+		pass
 
 func _on_bubble_collision():
 	main_scene.end_game()
