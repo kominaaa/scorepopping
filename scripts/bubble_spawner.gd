@@ -60,6 +60,7 @@ func _spawn_bubble(at_random: bool = false):
 		add_child(bubble)
 
 		# Connecter les signaux
+		bubble.connect("progress_updated", Callable(self, "_on_progress_updated"))
 		bubble.connect("bubble_destroyed", Callable(self, "_on_bubble_destroyed"))
 		bubble.connect("collision_detected", Callable(self, "_on_bubble_collision"))
 
@@ -98,7 +99,6 @@ func _cleanup_bubbles():
 		if bubble and not bubble.is_queued_for_deletion():
 			valid_bubbles.append(bubble)
 	bubbles = valid_bubbles
-
 
 func _on_bubble_destroyed(bubble: Node3D) -> void:
 	if bubble in bubbles:

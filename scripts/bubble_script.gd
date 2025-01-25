@@ -2,6 +2,7 @@ extends Node3D
 
 signal bubble_destroyed(bubble: Node3D)
 signal collision_detected
+signal progress_updated(progress: float)  # Signal pour transmettre le progress
 
 @export var scale_rate: float = 1.0
 @export var max_scale: float = 20.0
@@ -14,11 +15,13 @@ signal collision_detected
 @export var area: Area3D
 @export var collision_shape: CollisionShape3D
 
+var current_progress: float = 0.0
+
 func _ready():
 	scale = Vector3(1, 1, 1)
 	set_process(true)
 
-	# Connecter les signaux
+	# Connecter les signaux locaux
 	if area:
 		area.area_entered.connect(Callable(self, "_on_area_entered"))
 		area.input_event.connect(Callable(self, "_on_input_event"))
@@ -38,12 +41,21 @@ func _process(delta):
 		set_process(false)
 
 func _update_label_and_colors():
+	# Calcul du progress entre 0 et 1
 	var progress = (scale.x - 1.0) / (max_scale - 1.0)
+	current_progress = progress
+
+	# Émettre le signal pour l'éventuel usage externe (spawn script, etc.)
+	emit_signal("progress_updated", progress)
+
+	# Mise à jour du label
 	label_3d.text = str(round(lerp(float(min_value), float(max_value), progress)))
 
+	# Couleur via le gradient
 	var color = gradient_texture.gradient.get_color(progress)
 	label_3d.modulate = color
 
+	# Changer la couleur dans le ShaderMaterial, si c'est un SphereMesh
 	if bubble_mesh.mesh is SphereMesh:
 		var material = bubble_mesh.mesh.material
 		if material is ShaderMaterial:
@@ -58,11 +70,17 @@ func _on_input_event(camera: Camera3D, event: InputEvent, click_position: Vector
 		_on_bubble_clicked(click_position)
 
 func _on_bubble_clicked(impact_pos: Vector3) -> void:
+	# Instancier l'explosion
 	if explosion_scene:
 		var explosion = explosion_scene.instantiate()
-		explosion.global_transform.origin = self.global_transform.origin
+		explosion.global_transform.origin = global_transform.origin
 		get_tree().current_scene.add_child(explosion)
 
+		# Transmettre la valeur de progress pour configurer le pitch, le nombre de particules, etc.
+		if explosion.has_method("set_progress"):
+			explosion.set_progress(current_progress)
+
+	# Déconnecter l'area
 	if area:
 		area.area_entered.disconnect(Callable(self, "_on_area_entered"))
 		area.input_event.disconnect(Callable(self, "_on_input_event"))
