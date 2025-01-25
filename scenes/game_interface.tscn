@@ -1,10 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://wejovet6gbnc"]
+[gd_scene load_steps=6 format=3 uid="uid://wejovet6gbnc"]
 
 [ext_resource type="LabelSettings" uid="uid://ch0dgyft6pqrm" path="res://materials/interface_label_settings.tres" id="1_fu1yt"]
 [ext_resource type="Script" path="res://scripts/game_over_label.gd" id="2_dgvkp"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_hsfxb"]
 font_size = 48
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_3tk88"]
+font_size = 32
 outline_size = 6
 outline_color = Color(0, 0, 0, 1)
 
@@ -48,19 +53,40 @@ text = "100 000"
 label_settings = SubResource("LabelSettings_hsfxb")
 horizontal_alignment = 1
 
+[node name="BestScoreLabel" type="Label" parent="."]
+layout_mode = 1
+offset_right = 120.0
+offset_bottom = 23.0
+text = "Previous Best : "
+label_settings = ExtResource("1_fu1yt")
+horizontal_alignment = 1
+
+[node name="BestScoreValueLabel" type="Label" parent="BestScoreLabel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -118.0
+offset_top = 13.0
+offset_right = 120.0
+offset_bottom = 58.0
+grow_horizontal = 2
+text = "1000"
+label_settings = SubResource("LabelSettings_3tk88")
+horizontal_alignment = 1
+
 [node name="GameOverLabel" type="Label" parent="."]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
+anchor_bottom = 1.0
 offset_left = -132.0
-offset_top = -20.0
+offset_top = -45.0
 offset_right = 132.0
-offset_bottom = 20.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 text = "Game Over"
 label_settings = SubResource("LabelSettings_infcm")
 horizontal_alignment = 1

@@ -6,6 +6,7 @@ extends Node3D
 
 var score: int = 0
 var game_over: bool = false
+var allow_restart: bool = false
 
 func _ready():
 	process_mode = PROCESS_MODE_ALWAYS
@@ -23,15 +24,17 @@ func increment_score(value: int):
 		score_value_label.text = str(score)
 
 func end_game():
-	# Activer le Game Over et mettre le jeu en pause
 	game_over = true
+	allow_restart = false  # Bloque l'interaction immédiatement
 	get_tree().paused = true
 	if game_over_label:
 		game_over_label.show()
-		game_over_label.text = "Game Over! Cliquez pour rejouer."
+		game_over_label.text = "Game Over! Click to play again."
+	# Démarre un délai avant d'autoriser le restart
+	_create_restart_delay_timer(2.0)
 
 func _unhandled_input(event):
-	if game_over and event is InputEventMouseButton and event.pressed:
+	if game_over and allow_restart and event is InputEventMouseButton and event.pressed:
 		_restart_game()
 
 func _restart_game():
@@ -39,3 +42,14 @@ func _restart_game():
 	get_tree().paused = false
 	var current_scene_path = get_tree().current_scene.scene_file_path
 	get_tree().change_scene_to_file(current_scene_path)
+
+func _create_restart_delay_timer(delay: float):
+	var timer = Timer.new()
+	timer.one_shot = true
+	timer.wait_time = delay
+	timer.connect("timeout", Callable(self, "_allow_restart"))
+	add_child(timer)
+	timer.start()
+
+func _allow_restart():
+	allow_restart = true

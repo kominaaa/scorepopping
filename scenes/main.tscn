@@ -1,9 +1,14 @@
-[gd_scene load_steps=8 format=3 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=11 format=3 uid="uid://f3j6pq47rjkq"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_mnu6u"]
 [ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble_01.tscn" id="1_nwdim"]
 [ext_resource type="Script" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
+[ext_resource type="Script" path="res://scripts/rotate_bkg.gd" id="2_ptx1p"]
 [ext_resource type="PackedScene" uid="uid://wejovet6gbnc" path="res://scenes/game_interface.tscn" id="4_yko0o"]
+[ext_resource type="AudioStream" uid="uid://dm3ai0roexvim" path="res://sounds/end_pop.wav" id="5_a5248"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_nkees"]
+size = Vector3(5, 5, 5)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_nsgbv"]
 sky_top_color = Color(0.21053, 0.577765, 0.863089, 1)
@@ -26,15 +31,29 @@ camera = NodePath("Camera3D")
 score_value_label = NodePath("CanvasLayer/GameInterface/ScoreLabel/ScoreValueLabel")
 game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
 
+[node name="BKG" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BKG"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6.12743)
+mesh = SubResource("BoxMesh_nkees")
+skeleton = NodePath("")
+script = ExtResource("2_ptx1p")
+rotation_speed_x = 10.0
+rotation_speed_y = 3.0
+
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="GameInterface" parent="CanvasLayer" instance=ExtResource("4_yko0o")]
 mouse_filter = 2
 
-[node name="BubbleSpawner" type="Node3D" parent="."]
+[node name="BubbleSpawner" type="Node3D" parent="." node_paths=PackedStringArray("end_sound")]
 process_mode = 1
 script = ExtResource("2_fwp22")
 bubble_scene = ExtResource("1_nwdim")
+end_sound = NodePath("EndAudioStreamPlayer")
+
+[node name="EndAudioStreamPlayer" type="AudioStreamPlayer" parent="BubbleSpawner"]
+stream = ExtResource("5_a5248")
 
 [node name="ScoreManager" type="Node3D" parent="."]
 
