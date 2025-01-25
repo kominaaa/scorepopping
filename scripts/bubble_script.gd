@@ -1,8 +1,8 @@
 extends Node3D
 
-signal bubble_destroyed(bubble: Node3D)
+signal bubble_destroyed(bubble: Node3D, bubble_value: int)
 signal collision_detected
-signal progress_updated(progress: float)  # Signal pour transmettre le progress
+signal progress_updated(progress: float)  # pour transmettre la progression de la bulle
 
 @export var scale_rate: float = 1.0
 @export var max_scale: float = 20.0
@@ -16,49 +16,42 @@ signal progress_updated(progress: float)  # Signal pour transmettre le progress
 @export var collision_shape: CollisionShape3D
 
 var current_progress: float = 0.0
-var current_value: int = 0  # Nouvelle variable pour stocker la valeur actuelle
+var current_value: int = 0
 
 func _ready():
 	scale = Vector3(1, 1, 1)
 	set_process(true)
 
-	# Connecter les signaux locaux
 	if area:
 		area.area_entered.connect(Callable(self, "_on_area_entered"))
 		area.input_event.connect(Callable(self, "_on_input_event"))
 
 func _process(delta):
-	# Augmenter la taille de la bulle
 	if scale.x < max_scale:
 		var new_scale = scale + Vector3(scale_rate, scale_rate, scale_rate) * delta
 		if new_scale.x > max_scale:
 			new_scale = Vector3(max_scale, max_scale, max_scale)
 		scale = new_scale
 
-		# Mettre à jour l'apparence et les couleurs
 		_update_label_and_colors()
 	else:
 		print("Reached max scale. Stopping process.")
 		set_process(false)
 
 func _update_label_and_colors():
-	# Calcul du progress entre 0 et 1
 	current_progress = (scale.x - 1.0) / (max_scale - 1.0)
-
-	# Calcul de la valeur actuelle
 	current_value = round(lerp(float(min_value), float(max_value), current_progress))
 
-	# Émettre le signal pour l'éventuel usage externe (spawn script, etc.)
 	emit_signal("progress_updated", current_progress)
 
 	# Mise à jour du label
 	label_3d.text = str(current_value)
 
-	# Couleur via le gradient
+	# Appliquer la couleur du gradient
 	var color = gradient_texture.gradient.get_color(current_progress)
 	label_3d.modulate = color
 
-	# Changer la couleur dans le ShaderMaterial, si c'est un SphereMesh
+	# Changer la couleur dans le ShaderMaterial (si SphereMesh)
 	if bubble_mesh.mesh is SphereMesh:
 		var material = bubble_mesh.mesh.material
 		if material is ShaderMaterial:
@@ -79,14 +72,15 @@ func _on_bubble_clicked(impact_pos: Vector3) -> void:
 		explosion.global_transform.origin = global_transform.origin
 		get_tree().current_scene.add_child(explosion)
 
-		# Transmettre la valeur de progress pour configurer le pitch, le nombre de particules, etc.
 		if explosion.has_method("set_progress"):
 			explosion.set_progress(current_progress)
 
-	# Déconnecter l'area
+	# Déconnecter l'area avant de supprimer la bulle
 	if area:
 		area.area_entered.disconnect(Callable(self, "_on_area_entered"))
 		area.input_event.disconnect(Callable(self, "_on_input_event"))
 
-	emit_signal("bubble_destroyed", self)
+	# Émettre le signal bubble_destroyed avec la valeur
+	emit_signal("bubble_destroyed", self, current_value)
+
 	queue_free()

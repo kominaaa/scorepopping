@@ -60,7 +60,6 @@ func _spawn_bubble(at_random: bool = false):
 			spawn_successful = true
 			break
 
-	# Spawner la bulle uniquement si une position valide a été trouvée
 	if spawn_successful:
 		var bubble = bubble_scene.instantiate()
 		bubble.global_transform.origin = spawn_pos
@@ -71,10 +70,7 @@ func _spawn_bubble(at_random: bool = false):
 		bubble.connect("bubble_destroyed", Callable(self, "_on_bubble_destroyed"))
 		bubble.connect("collision_detected", Callable(self, "_on_bubble_collision"))
 
-		# Ajouter la bulle à la liste
 		bubbles.append(bubble)
-
-		# Incrémenter le compteur
 		current_spawn_count += 1
 	else:
 		print("No valid position found for spawning a bubble.")
@@ -110,27 +106,35 @@ func _cleanup_bubbles():
 			valid_bubbles.append(bubble)
 	bubbles = valid_bubbles
 
-func _on_bubble_destroyed(bubble: Node3D) -> void:
+func _on_bubble_destroyed(bubble: Node3D, bubble_value: int) -> void:
 	if bubble in bubbles:
 		bubbles.erase(bubble)
+
+	# Transmettre l’incrément de score au script principal
+	var main_scene = get_tree().get_current_scene()
+	if main_scene and main_scene.has_method("increment_score"):
+		main_scene.increment_score(bubble_value)
 
 func _on_bubble_collision():
 	print("Collision detected! Restarting game...")
 	_restart_game()
 
 func _check_collisions():
-	# Vérifie les collisions entre toutes les bulles
 	for i in range(bubbles.size()):
 		for j in range(i + 1, bubbles.size()):
 			var bubble_a = bubbles[i]
 			var bubble_b = bubbles[j]
 
-			if bubble_a and bubble_b and not bubble_a.is_queued_for_deletion() and not bubble_b.is_queued_for_deletion():
+			if bubble_a and bubble_b \
+				and not bubble_a.is_queued_for_deletion() \
+				and not bubble_b.is_queued_for_deletion():
+
 				var distance = bubble_a.global_transform.origin.distance_to(bubble_b.global_transform.origin)
 				if distance < min_spawn_distance:
 					_on_bubble_collision()
 
 func _restart_game():
+	# Supprime toutes les bulles
 	for bubble in bubbles:
 		if bubble:
 			bubble.queue_free()
@@ -139,3 +143,7 @@ func _restart_game():
 	# Réinitialiser la scène
 	var current_scene_path = get_tree().current_scene.scene_file_path
 	get_tree().change_scene_to_file(current_scene_path)
+
+func _on_progress_updated(progress: float):
+	# Callback si besoin d'exploiter le "progress" en temps réel
+	pass
