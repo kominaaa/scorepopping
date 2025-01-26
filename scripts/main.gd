@@ -102,3 +102,7 @@ func _create_restart_delay_timer(delay: float):
 
 func _allow_restart():
 	allow_restart = true
+
+func _input(event):
+	if event.is_action_pressed("quit"):
+		get_tree().quit()
