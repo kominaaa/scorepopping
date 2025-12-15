@@ -7,7 +7,8 @@ signal progress_updated(progress: float)
 @export var scale_rate: float = 1.0
 @export var max_scale: float = 20.0
 @export var min_value: int = 1
-@export var max_value: int = 1000
+@export var max_value: int = 2000
+@export_range(0.1, 10.0, 0.1) var score_exponent: float = 1.5
 @export var label_3d: Label3D
 @export var bubble_mesh: MeshInstance3D
 @export var explosion_scene: PackedScene
@@ -41,12 +42,15 @@ func _process(delta: float):
 		_pop_bubble()
 
 func _update_label_and_colors():
-	current_progress = (scale.x - 1.0) / (max_scale - 2.0)
-	current_value = round(lerp(float(min_value), float(max_value), current_progress))
+	current_progress = clamp((scale.x - 1.0) / (max_scale - 1.0), 0.0, 1.0)
+
+	var curved := pow(current_progress, score_exponent)
+
+	current_value = int(round(lerp(float(min_value), float(max_value), curved)))
 
 	emit_signal("progress_updated", current_progress)
-
 	label_3d.text = str(current_value)
+
 
 func _on_area_entered(other_area: Area3D) -> void:
 	if other_area.get_parent() != self:

@@ -1,9 +1,9 @@
 [gd_scene load_steps=7 format=3 uid="uid://ber4mr242hy4d"]
 
-[ext_resource type="Script" path="res://scripts/bubble_script.gd" id="1_fppde"]
+[ext_resource type="Script" uid="uid://0251a4rbv78p" path="res://scripts/bubble_script.gd" id="1_fppde"]
 [ext_resource type="Material" uid="uid://dvm1rob5rkjdb" path="res://materials/bubble_material.material" id="1_xgug0"]
 [ext_resource type="PackedScene" uid="uid://cjfx7vcbemlqa" path="res://scenes/bubble_pop_particles.tscn" id="3_7k5ht"]
-[ext_resource type="Script" path="res://scripts/bubble_clicker.gd" id="3_vc674"]
+[ext_resource type="Script" uid="uid://dbv0et5ht8u0i" path="res://scripts/bubble_clicker.gd" id="3_vc674"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_xdfes"]
 material = ExtResource("1_xgug0")

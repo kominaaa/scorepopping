@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://cjfx7vcbemlqa"]
 
-[ext_resource type="Script" path="res://scripts/pop_particles.gd" id="1_0o8rm"]
+[ext_resource type="Script" uid="uid://fkcg0hax6rbw" path="res://scripts/pop_particles.gd" id="1_0o8rm"]
 [ext_resource type="AudioStream" uid="uid://nttrqjj0tw83" path="res://audio/pop.wav" id="2_ewnaj"]
 
 [sub_resource type="Curve" id="Curve_ptyhd"]
