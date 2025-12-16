@@ -14,6 +14,7 @@ extends Node3D
 @export var spawn_smooth: float = 10.0
 
 @export var difficulty_affects_grow: bool = true
+@export var difficulty_affects_score: bool = true
 
 @export var bubbles_for_start_slow: int = 2
 @export var bubbles_for_max_slow: int = 10
@@ -25,11 +26,19 @@ extends Node3D
 @export var quota_max: int = 18
 @export var quota_spawn_burst_limit: int = 3
 
+@export var risk_enabled: bool = true
+@export var risk_neighbors: int = 3
+@export var risk_range: float = 0.18
+@export var risk_power: float = 2.0
+@export var risk_max_multiplier: float = 2.5
+@export var risk_refresh_interval: float = 0.10
+
 @onready var main_scene: Node = get_tree().get_current_scene()
 
 var spawn_timer: Timer
 var bubbles: Array[Node3D] = []
 var spawn_factor_smoothed: float = 1.0
+var risk_refresh_accum: float = 0.0
 
 
 func _ready() -> void:
@@ -58,7 +67,24 @@ func _process(delta: float) -> void:
 			spawn_timer.wait_time = spawn_interval
 
 	if difficulty_affects_grow:
-		_apply_difficulty_to_bubbles()
+		_apply_difficulty_to_grow()
+
+	if difficulty_affects_score:
+		_apply_difficulty_to_score()
+
+	if risk_enabled:
+		risk_refresh_accum += delta
+		if risk_refresh_accum >= max(risk_refresh_interval, 0.001):
+			risk_refresh_accum = 0.0
+			_update_risk_realtime()
+
+
+func _get_difficulty_multiplier() -> float:
+	if main_scene == null:
+		return 1.0
+	if not main_scene.has_method("get_difficulty_factor"):
+		return 1.0
+	return max(float(main_scene.get_difficulty_factor()), 0.0)
 
 
 func _enforce_quota() -> void:
@@ -69,8 +95,9 @@ func _enforce_quota() -> void:
 	if "game_over" in main_scene and bool(main_scene.game_over):
 		return
 
-	var diff_mult: float = float(main_scene.get_difficulty_factor())
+	var diff_mult: float = _get_difficulty_multiplier()
 	var doublings: int = int(floor(log(max(diff_mult, 1.0)) / log(2.0)))
+
 	var q: int = quota_base + doublings * quota_per_doubling
 	if quota_max > 0:
 		q = min(q, quota_max)
@@ -116,7 +143,7 @@ func _update_spawn_rate(delta: float) -> void:
 	if "game_over" in main_scene and bool(main_scene.game_over):
 		return
 
-	var diff_mult: float = float(main_scene.get_difficulty_factor())
+	var diff_mult: float = _get_difficulty_multiplier()
 	var d01: float = clamp(log(max(diff_mult, 1.0)) / log(2.0), 0.0, 1.0)
 	var target_factor: float = lerp(1.0, min_spawn_factor_at_high_difficulty, d01)
 
@@ -129,19 +156,32 @@ func _update_spawn_rate(delta: float) -> void:
 	spawn_timer.wait_time = spawn_interval * spawn_factor_smoothed
 
 
-func _apply_difficulty_to_bubbles() -> void:
-	if main_scene == null:
-		return
-	if not main_scene.has_method("get_difficulty_factor"):
-		return
+func _apply_difficulty_to_grow() -> void:
 	if "game_over" in main_scene and bool(main_scene.game_over):
 		return
 
-	var diff_mult: float = float(main_scene.get_difficulty_factor())
+	var diff_mult: float = _get_difficulty_multiplier()
 
 	for b: Node3D in bubbles:
 		if b and not b.is_queued_for_deletion() and b.has_method("set_grow_multiplier"):
 			b.set_grow_multiplier(diff_mult)
+
+
+func _apply_difficulty_to_score() -> void:
+	if "game_over" in main_scene and bool(main_scene.game_over):
+		return
+
+	var diff_mult: float = _get_difficulty_multiplier()
+
+	for b: Node3D in bubbles:
+		if b and not b.is_queued_for_deletion() and b.has_method("set_difficulty_multiplier"):
+			b.set_difficulty_multiplier(diff_mult)
+
+
+func _update_risk_realtime() -> void:
+	for b: Node3D in bubbles:
+		if b and not b.is_queued_for_deletion() and b.has_method("set_risk_multiplier"):
+			b.set_risk_multiplier(_compute_risk_multiplier(b))
 
 
 func _spawn_bubble(at_random: bool = false) -> void:
@@ -181,8 +221,14 @@ func _spawn_bubble(at_random: bool = false) -> void:
 
 	bubbles.append(bubble)
 
-	if difficulty_affects_grow and main_scene and main_scene.has_method("get_difficulty_factor") and bubble.has_method("set_grow_multiplier"):
-		bubble.set_grow_multiplier(float(main_scene.get_difficulty_factor()))
+	if difficulty_affects_grow and bubble.has_method("set_grow_multiplier"):
+		bubble.set_grow_multiplier(_get_difficulty_multiplier())
+
+	if difficulty_affects_score and bubble.has_method("set_difficulty_multiplier"):
+		bubble.set_difficulty_multiplier(_get_difficulty_multiplier())
+
+	if risk_enabled and bubble.has_method("set_risk_multiplier"):
+		bubble.set_risk_multiplier(_compute_risk_multiplier(bubble))
 
 
 func _random_position() -> Vector3:
@@ -218,12 +264,62 @@ func _cleanup_bubbles() -> void:
 	bubbles = valid
 
 
-func _on_bubble_destroyed(bubble: Node3D, bubble_value: int) -> void:
+func _on_bubble_destroyed(bubble: Node3D, bubble_base_value: int) -> void:
 	if bubble in bubbles:
 		bubbles.erase(bubble)
 
+	var final_value_f: float = float(bubble_base_value)
+
+	if risk_enabled:
+		final_value_f *= _compute_risk_multiplier(bubble)
+
+	if difficulty_affects_score:
+		final_value_f *= _get_difficulty_multiplier()
+
+	var final_value: int = int(round(final_value_f))
+
 	if main_scene and main_scene.has_method("increment_score"):
-		main_scene.increment_score(bubble_value)
+		main_scene.increment_score(final_value)
+
+
+func _compute_risk_multiplier(bubble: Node3D) -> float:
+	if bubble == null:
+		return 1.0
+	if bubble.is_queued_for_deletion():
+		return 1.0
+
+	var gaps: Array[float] = []
+	var radius_a: float = 0.5 * bubble.scale.x
+
+	for other: Node3D in bubbles:
+		if other == bubble:
+			continue
+		if other == null:
+			continue
+		if other.is_queued_for_deletion():
+			continue
+
+		var radius_b: float = 0.5 * other.scale.x
+		var dist: float = bubble.global_transform.origin.distance_to(other.global_transform.origin)
+		var gap: float = dist - (radius_a + radius_b)
+		gaps.append(gap)
+
+	if gaps.is_empty():
+		return 1.0
+
+	gaps.sort()
+
+	var k: int = min(max(risk_neighbors, 1), gaps.size())
+	var sum: float = 0.0
+	var rr: float = max(risk_range, 0.0001)
+
+	for i: int in range(k):
+		var g: float = gaps[i]
+		var closeness: float = clamp(1.0 - (g / rr), 0.0, 1.0)
+		sum += pow(closeness, risk_power)
+
+	var avg: float = sum / float(k)
+	return lerp(1.0, risk_max_multiplier, avg)
 
 
 func _on_bubble_collision() -> void:

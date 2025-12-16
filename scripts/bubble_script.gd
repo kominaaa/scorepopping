@@ -1,13 +1,13 @@
 extends Node3D
 
-signal bubble_destroyed(bubble: Node3D, bubble_value: int)
+signal bubble_destroyed(bubble: Node3D, bubble_base_value: int)
 signal collision_detected
 signal progress_updated(progress: float)
 
 @export var scale_rate: float = 1.0
 @export var max_scale: float = 20.0
 @export var min_value: int = 1
-@export var max_value: int = 2000
+@export var max_value: int = 200
 @export_range(0.1, 10.0, 0.1) var score_exponent: float = 1.0
 @export var label_3d: Label3D
 @export var bubble_mesh: MeshInstance3D
@@ -16,13 +16,14 @@ signal progress_updated(progress: float)
 @export var collision_shape: CollisionShape3D
 
 var current_progress: float = 0.0
-var current_value: int = 0
+var current_base_value: int = 0
 
-# --- ajouté : facteur appliqué sur la vitesse de croissance
 var grow_multiplier: float = 1.0
+var risk_multiplier: float = 1.0
+var difficulty_multiplier: float = 1.0
 
 
-func _ready():
+func _ready() -> void:
 	set_process(true)
 
 	if area:
@@ -31,22 +32,28 @@ func _ready():
 
 
 func set_grow_multiplier(m: float) -> void:
-	# clamp pour éviter les valeurs bizarres
 	grow_multiplier = max(m, 0.0)
 
 
-func _process(delta: float):
-	if scale.x < max_scale:
-		var effective_rate := scale_rate * grow_multiplier
+func set_risk_multiplier(m: float) -> void:
+	risk_multiplier = max(m, 1.0)
 
-		var new_scale = scale + Vector3(effective_rate, effective_rate, effective_rate) * delta
+
+func set_difficulty_multiplier(m: float) -> void:
+	difficulty_multiplier = max(m, 0.0)
+
+
+func _process(delta: float) -> void:
+	if scale.x < max_scale:
+		var effective_rate: float = scale_rate * grow_multiplier
+		var new_scale: Vector3 = scale + Vector3(effective_rate, effective_rate, effective_rate) * delta
 		if new_scale.x > max_scale:
 			new_scale = Vector3(max_scale, max_scale, max_scale)
 		scale = new_scale
 
-		_update_label_and_colors()
+		_update_label_and_value()
 
-		if current_value >= max_value:
+		if current_base_value >= max_value:
 			_pop_bubble()
 			return
 	else:
@@ -54,17 +61,18 @@ func _process(delta: float):
 		_pop_bubble()
 
 
-func _update_label_and_colors():
+func _update_label_and_value() -> void:
 	current_progress = clamp((scale.x - 1.0) / (max_scale - 1.0), 0.0, 1.0)
+	var curved: float = pow(current_progress, score_exponent)
 
-	var curved := pow(current_progress, score_exponent)
-
-	current_value = int(round(lerp(float(min_value), float(max_value), curved)))
+	var base_value_f: float = lerp(float(min_value), float(max_value), curved)
+	current_base_value = int(round(base_value_f))
 
 	emit_signal("progress_updated", current_progress)
 
 	if label_3d:
-		label_3d.text = str(current_value)
+		var displayed: float = float(current_base_value) * risk_multiplier * difficulty_multiplier
+		label_3d.text = str(int(round(displayed)))
 
 
 func _on_area_entered(other_area: Area3D) -> void:
@@ -74,27 +82,23 @@ func _on_area_entered(other_area: Area3D) -> void:
 
 func _on_input_event(camera: Camera3D, event: InputEvent, click_position: Vector3, click_normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_on_bubble_clicked(click_position)
-
-
-func _on_bubble_clicked(impact_pos: Vector3) -> void:
-	_pop_bubble()
+		_pop_bubble()
 
 
 func _pop_bubble() -> void:
 	if explosion_scene:
-		var explosion = explosion_scene.instantiate()
-		explosion.global_transform.origin = global_transform.origin
+		var explosion: Node = explosion_scene.instantiate()
+		(explosion as Node3D).global_transform.origin = global_transform.origin
 		get_tree().current_scene.add_child(explosion)
 
 		if explosion.has_method("set_progress"):
-			explosion.set_progress(current_progress)
+			explosion.call("set_progress", current_progress)
 
 	if area:
-		if area.area_entered.is_connected(_on_area_entered):
+		if area.area_entered.is_connected(Callable(self, "_on_area_entered")):
 			area.area_entered.disconnect(Callable(self, "_on_area_entered"))
-		if area.input_event.is_connected(_on_input_event):
+		if area.input_event.is_connected(Callable(self, "_on_input_event")):
 			area.input_event.disconnect(Callable(self, "_on_input_event"))
 
-	emit_signal("bubble_destroyed", self, current_value)
+	emit_signal("bubble_destroyed", self, current_base_value)
 	queue_free()
