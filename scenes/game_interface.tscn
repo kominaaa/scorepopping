@@ -35,6 +35,7 @@ offset_bottom = 72.0
 layout_mode = 2
 text = "Meilleur Score : "
 label_settings = ExtResource("1_fu1yt")
+horizontal_alignment = 1
 
 [node name="BestScoreValueLabel" type="Label" parent="BestScoreControl"]
 layout_mode = 2
@@ -56,7 +57,7 @@ text = "100 000"
 label_settings = SubResource("LabelSettings_hsfxb")
 horizontal_alignment = 1
 
-[node name="TimerControl" type="VBoxContainer" parent="."]
+[node name="DifficultyControl" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -65,15 +66,15 @@ offset_left = -121.0
 offset_bottom = 72.0
 grow_horizontal = 0
 
-[node name="TimerLabel" type="Label" parent="TimerControl"]
+[node name="DifficultyLabel" type="Label" parent="DifficultyControl"]
 layout_mode = 2
-text = "Temps restant :"
+text = "Difficulté :"
 label_settings = ExtResource("1_fu1yt")
-horizontal_alignment = 2
+horizontal_alignment = 1
 
-[node name="TimerValueLabel" type="Label" parent="TimerControl"]
+[node name="DifficultyValueLabel" type="Label" parent="DifficultyControl"]
 layout_mode = 2
-text = "10 : 20"
+text = "x 2.0"
 label_settings = SubResource("LabelSettings_3tk88")
 horizontal_alignment = 1
 

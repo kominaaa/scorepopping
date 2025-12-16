@@ -9,28 +9,30 @@ extends Node3D
 @export var max_spawn_attempts: int = 50
 @export var end_sound: AudioStreamPlayer
 
-# --- Pression / slow-time tuning ---
-@export var progress_power: float = 1.2      # >1 favorise les grosses bulles
-@export var max_progress_sum: float = 2.5    # plafond
+@export var difficulty_affects_spawn: bool = true
+@export var min_spawn_factor_at_high_difficulty: float = 0.55
+@export var spawn_smooth: float = 10.0
 
-# --- Spawn rate dynamique (late game haletant) ---
-@export var spawn_accel_start_seconds: float = 15.0  # en dessous de 15s, on accélère
-@export var min_spawn_factor_at_zero: float = 0.55   # à 0s: wait_time = spawn_interval * 0.55 (donc + vite)
-@export var spawn_smooth: float = 10.0               # lissage (plus haut = plus réactif)
+@export var difficulty_affects_grow: bool = true
 
-@onready var main_scene = get_tree().get_current_scene()
+@export var bubbles_for_start_slow: int = 2
+@export var bubbles_for_max_slow: int = 10
+@export var bubble_count_curve: float = 1.8
+
+@export var quota_enabled: bool = true
+@export var quota_base: int = 2
+@export var quota_per_doubling: int = 1
+@export var quota_max: int = 18
+@export var quota_spawn_burst_limit: int = 3
+
+@onready var main_scene: Node = get_tree().get_current_scene()
 
 var spawn_timer: Timer
-var bubbles: Array = []
-
-# Progress par bulle pour calculer la pression
-var bubble_progress := {} # Dictionary[int, float]
-
-# Lissage du facteur de spawn
+var bubbles: Array[Node3D] = []
 var spawn_factor_smoothed: float = 1.0
 
 
-func _ready():
+func _ready() -> void:
 	spawn_timer = Timer.new()
 	spawn_timer.wait_time = spawn_interval
 	spawn_timer.one_shot = false
@@ -41,34 +43,83 @@ func _ready():
 	spawn_timer.start()
 
 
-func _process(delta: float):
+func _process(delta: float) -> void:
+	_cleanup_bubbles()
 	_check_collisions()
-	_update_pressure()
-	_update_spawn_rate(delta)
+	_update_bubble_load_factor()
+
+	if quota_enabled:
+		_enforce_quota()
+
+	if difficulty_affects_spawn:
+		_update_spawn_rate(delta)
+	else:
+		if spawn_timer:
+			spawn_timer.wait_time = spawn_interval
+
+	if difficulty_affects_grow:
+		_apply_difficulty_to_bubbles()
+
+
+func _enforce_quota() -> void:
+	if main_scene == null:
+		return
+	if not main_scene.has_method("get_difficulty_factor"):
+		return
+	if "game_over" in main_scene and bool(main_scene.game_over):
+		return
+
+	var diff_mult: float = float(main_scene.get_difficulty_factor())
+	var doublings: int = int(floor(log(max(diff_mult, 1.0)) / log(2.0)))
+	var q: int = quota_base + doublings * quota_per_doubling
+	if quota_max > 0:
+		q = min(q, quota_max)
+
+	var missing: int = q - bubbles.size()
+	if missing <= 0:
+		return
+
+	var burst: int = min(missing, max(quota_spawn_burst_limit, 1))
+	for _i: int in range(burst):
+		_spawn_bubble(true)
+
+
+func _update_bubble_load_factor() -> void:
+	if main_scene == null:
+		return
+	if not main_scene.has_method("set_bubble_load_factor"):
+		return
+	if "game_over" in main_scene and bool(main_scene.game_over):
+		return
+
+	var count: int = 0
+	for b: Node3D in bubbles:
+		if b and not b.is_queued_for_deletion():
+			count += 1
+
+	var start: int = max(bubbles_for_start_slow, 0)
+	var maxb: int = max(bubbles_for_max_slow, start + 1)
+
+	var raw: float = clamp(float(count - start) / float(maxb - start), 0.0, 1.0)
+	var shaped: float = pow(raw, bubble_count_curve)
+
+	main_scene.set_bubble_load_factor(shaped)
 
 
 func _update_spawn_rate(delta: float) -> void:
 	if main_scene == null:
 		return
-	if not ("remaining_time" in main_scene):
+	if not main_scene.has_method("get_difficulty_factor"):
 		return
 	if spawn_timer == null:
 		return
-
-	# Si game over, ne change plus le spawn rate
 	if "game_over" in main_scene and bool(main_scene.game_over):
 		return
 
-	var t := float(main_scene.remaining_time)
+	var diff_mult: float = float(main_scene.get_difficulty_factor())
+	var d01: float = clamp(log(max(diff_mult, 1.0)) / log(2.0), 0.0, 1.0)
+	var target_factor: float = lerp(1.0, min_spawn_factor_at_high_difficulty, d01)
 
-	# low = 0 -> normal, low = 1 -> temps très bas
-	var low := 0.0
-	if spawn_accel_start_seconds > 0.0:
-		low = clamp(1.0 - (t / spawn_accel_start_seconds), 0.0, 1.0)
-
-	var target_factor : float = lerp(1.0, min_spawn_factor_at_zero, low)
-
-	# Lissage pour éviter les à-coups
 	spawn_factor_smoothed = lerp(
 		spawn_factor_smoothed,
 		target_factor,
@@ -78,144 +129,118 @@ func _update_spawn_rate(delta: float) -> void:
 	spawn_timer.wait_time = spawn_interval * spawn_factor_smoothed
 
 
-func _spawn_bubble(at_random: bool = false):
+func _apply_difficulty_to_bubbles() -> void:
+	if main_scene == null:
+		return
+	if not main_scene.has_method("get_difficulty_factor"):
+		return
+	if "game_over" in main_scene and bool(main_scene.game_over):
+		return
+
+	var diff_mult: float = float(main_scene.get_difficulty_factor())
+
+	for b: Node3D in bubbles:
+		if b and not b.is_queued_for_deletion() and b.has_method("set_grow_multiplier"):
+			b.set_grow_multiplier(diff_mult)
+
+
+func _spawn_bubble(at_random: bool = false) -> void:
 	_cleanup_bubbles()
 
-	var spawn_pos: Vector3
-	var spawn_successful = false
+	var spawn_pos: Vector3 = Vector3.ZERO
+	var spawn_successful: bool = false
 
-	for attempt in range(max_spawn_attempts):
+	for _i: int in range(max_spawn_attempts):
 		if at_random or bubbles.is_empty():
 			spawn_pos = _random_position()
 		else:
 			spawn_pos = _find_farthest_position()
 
-		var is_valid_position = true
-		for bubble in bubbles:
-			if bubble and not bubble.is_queued_for_deletion():
-				if spawn_pos.distance_to(bubble.global_transform.origin) < min_spawn_distance:
-					is_valid_position = false
+		var valid: bool = true
+		for b: Node3D in bubbles:
+			if b and not b.is_queued_for_deletion():
+				if spawn_pos.distance_to(b.global_transform.origin) < min_spawn_distance:
+					valid = false
 					break
 
-		if is_valid_position:
+		if valid:
 			spawn_successful = true
 			break
 
-	if spawn_successful:
-		var bubble = bubble_scene.instantiate()
-		bubble.global_transform.origin = spawn_pos
-		add_child(bubble)
+	if not spawn_successful:
+		return
 
-		# Connexions existantes
-		bubble.connect("progress_updated", Callable(self, "_on_progress_updated").bind(bubble))
+	var bubble: Node3D = bubble_scene.instantiate()
+	bubble.global_transform.origin = spawn_pos
+	add_child(bubble)
+
+	if bubble.has_signal("bubble_destroyed"):
 		bubble.connect("bubble_destroyed", Callable(self, "_on_bubble_destroyed"))
+	if bubble.has_signal("collision_detected"):
 		bubble.connect("collision_detected", Callable(self, "_on_bubble_collision"))
 
-		bubbles.append(bubble)
+	bubbles.append(bubble)
 
-		# Init progress
-		bubble_progress[bubble.get_instance_id()] = 0.0
+	if difficulty_affects_grow and main_scene and main_scene.has_method("get_difficulty_factor") and bubble.has_method("set_grow_multiplier"):
+		bubble.set_grow_multiplier(float(main_scene.get_difficulty_factor()))
 
 
 func _random_position() -> Vector3:
-	var x_pos = randf_range(x_range.x, x_range.y)
-	var y_pos = randf_range(y_range.x, y_range.y)
+	var x_pos: float = randf_range(x_range.x, x_range.y)
+	var y_pos: float = randf_range(y_range.x, y_range.y)
 	return Vector3(x_pos, y_pos, z_position)
 
 
 func _find_farthest_position() -> Vector3:
-	var farthest_position: Vector3 = Vector3.ZERO
-	var max_distance: float = -INF
+	var farthest: Vector3 = Vector3.ZERO
+	var best_min_dist: float = -INF
 
-	for i in range(50):
-		var candidate = _random_position()
-		var min_distance = INF
+	for _i: int in range(50):
+		var candidate: Vector3 = _random_position()
+		var min_dist: float = INF
 
-		for bubble in bubbles:
-			if bubble and not bubble.is_queued_for_deletion():
-				var distance = candidate.distance_to(bubble.global_transform.origin)
-				min_distance = min(min_distance, distance)
+		for b: Node3D in bubbles:
+			if b and not b.is_queued_for_deletion():
+				min_dist = min(min_dist, candidate.distance_to(b.global_transform.origin))
 
-		if min_distance > max_distance:
-			max_distance = min_distance
-			farthest_position = candidate
+		if min_dist > best_min_dist:
+			best_min_dist = min_dist
+			farthest = candidate
 
-	return farthest_position
+	return farthest
 
 
-func _cleanup_bubbles():
-	var valid_bubbles = []
-	for bubble in bubbles:
-		if bubble and not bubble.is_queued_for_deletion():
-			valid_bubbles.append(bubble)
-		else:
-			if bubble:
-				bubble_progress.erase(bubble.get_instance_id())
-
-	bubbles = valid_bubbles
+func _cleanup_bubbles() -> void:
+	var valid: Array[Node3D] = []
+	for b: Node3D in bubbles:
+		if b and not b.is_queued_for_deletion():
+			valid.append(b)
+	bubbles = valid
 
 
 func _on_bubble_destroyed(bubble: Node3D, bubble_value: int) -> void:
 	if bubble in bubbles:
 		bubbles.erase(bubble)
 
-	if bubble:
-		bubble_progress.erase(bubble.get_instance_id())
-
 	if main_scene and main_scene.has_method("increment_score"):
 		main_scene.increment_score(bubble_value)
 
 
-func _on_bubble_collision():
+func _on_bubble_collision() -> void:
 	if main_scene and main_scene.has_method("end_game"):
 		main_scene.end_game()
 	if end_sound:
 		end_sound.play()
 
 
-func _check_collisions():
-	for i in range(bubbles.size()):
-		for j in range(i + 1, bubbles.size()):
-			var bubble_a = bubbles[i]
-			var bubble_b = bubbles[j]
+func _check_collisions() -> void:
+	for i: int in range(bubbles.size()):
+		for j: int in range(i + 1, bubbles.size()):
+			var a: Node3D = bubbles[i]
+			var b: Node3D = bubbles[j]
 
-			if bubble_a and bubble_b \
-				and not bubble_a.is_queued_for_deletion() \
-				and not bubble_b.is_queued_for_deletion():
-
-				var distance = bubble_a.global_transform.origin.distance_to(bubble_b.global_transform.origin)
-				if distance < min_spawn_distance:
+			if a and b and not a.is_queued_for_deletion() and not b.is_queued_for_deletion():
+				var d: float = a.global_transform.origin.distance_to(b.global_transform.origin)
+				if d < min_spawn_distance:
 					_on_bubble_collision()
-
-
-func _restart_game():
-	for bubble in bubbles:
-		if bubble:
-			bubble.queue_free()
-	bubbles.clear()
-	bubble_progress.clear()
-
-	var current_scene_path = get_tree().current_scene.scene_file_path
-	get_tree().change_scene_to_file(current_scene_path)
-
-
-func _on_progress_updated(progress: float, bubble: Node) -> void:
-	if bubble == null:
-		return
-	bubble_progress[bubble.get_instance_id()] = clamp(progress, 0.0, 1.0)
-
-
-func _update_pressure() -> void:
-	if main_scene == null:
-		return
-	if not main_scene.has_method("set_pressure_factor"):
-		return
-
-	var sum_progress := 0.0
-	for bubble in bubbles:
-		if bubble and not bubble.is_queued_for_deletion():
-			var p: float = bubble_progress.get(bubble.get_instance_id(), 0.0)
-			sum_progress += pow(p, progress_power)
-
-	var factor: float = clamp(sum_progress / max_progress_sum, 0.0, 1.0)
-	main_scene.set_pressure_factor(factor)
+					return

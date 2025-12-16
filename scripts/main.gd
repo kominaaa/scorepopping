@@ -3,30 +3,25 @@ extends Node3D
 @export var camera: Camera3D
 @export var score_value_label: Label
 @export var best_score_label: Label
+@export var difficulty_value_label: Label
 @export var game_over_label: Label
-@export var timer_value_label: Label
-@export var initial_time: float = 45.0
+@export var survival_time_label: Label
 
 # --- Score "roulant"
 @export var base_roll_speed: float = 800.0
 @export var roll_factor: float = 0.12
 
-# --- Slow-time (piloté par la pression envoyée par le spawner)
-@export_range(0.1, 1.0, 0.01) var min_timescale: float = 0.50
-@export_range(0.1, 1.0, 0.01) var min_timer_speed: float = 0.50
-@export var slow_smooth: float = 8.0
+# --- Slowdown basé sur le nombre de bulles
+@export_range(0.05, 1.0, 0.01) var min_timescale: float = 0.35  # plus bas = plus visible
+@export var slowdown_smooth: float = 10.0                       # lissage
+@export var slowdown_curve_power: float = 1.8                   # >1 rend l'effet plus "prononcé"
+@export var show_timescale_debug: bool = false
 
-# --- Bonus temps basé sur le score ajouté
-@export var points_per_second: float = 20.0          # 20 pts = +1s (chez toi)
-@export var max_bonus_seconds_per_pop: float = 0.25  # plafond par bulle
-@export var max_remaining_time_cap: float = 45.0     # cap du timer
-
-# --- Late-game : bonus temps amplifié quand il reste peu de temps
-@export var low_time_boost_start_seconds: float = 10.0  # en dessous de 10s, bonus augmente
-@export var max_low_time_multiplier: float = 2.5        # à 0s => bonus * 2.5
-
-# --- Atténuation du slow-motion en fin de run (timescale uniquement)
-@export var timescale_fade_start_seconds: float = 15.0
+# --- Difficulty (infinie) en multiplicateur
+@export var base_difficulty_multiplier: float = 1.0
+@export var seconds_per_doubling: float = 25.0
+@export var curve_power: float = 1.0
+@export var difficulty_decimals: int = 2
 
 var score: int = 0
 var target_score: int = 0
@@ -34,11 +29,13 @@ var display_score: float = 0.0
 
 var game_over: bool = false
 var allow_restart: bool = false
-var remaining_time: float = 0.0
-var timer: Timer = null
 
-var pressure_factor: float = 0.0
-var pressure_factor_smoothed: float = 0.0
+var run_time: float = 0.0
+var difficulty_multiplier: float = 1.0
+
+# facteur envoyé par le spawner (0..1) : 0 = peu de bulles, 1 = beaucoup
+var bubble_load_factor: float = 0.0
+var bubble_load_smoothed: float = 0.0
 
 
 func _ready():
@@ -49,6 +46,8 @@ func _ready():
 	score = 0
 	target_score = 0
 	display_score = 0.0
+	run_time = 0.0
+	difficulty_multiplier = base_difficulty_multiplier
 
 	if score_value_label:
 		score_value_label.text = str(int(display_score))
@@ -59,32 +58,42 @@ func _ready():
 	if game_over_label:
 		game_over_label.hide()
 
-	remaining_time = initial_time
-	if timer_value_label:
-		timer_value_label.text = _format_time(remaining_time)
-
 	Engine.time_scale = 1.0
-	_start_timer()
+	_update_difficulty_label()
 
 
 func _process(delta: float) -> void:
-	# Lissage de la pression
 	if not game_over:
-		pressure_factor_smoothed = lerp(
-			pressure_factor_smoothed,
-			pressure_factor,
-			1.0 - exp(-slow_smooth * delta)
+		# --- Difficulté infinie en multiplicateur
+		run_time += delta
+		var doubling: float = max(seconds_per_doubling, 0.001)
+		var growth_per_second := pow(2.0, 1.0 / doubling)
+		var t := pow(run_time, curve_power)
+		difficulty_multiplier = base_difficulty_multiplier * pow(growth_per_second, t)
+
+		if survival_time_label:
+			survival_time_label.text = _format_survival_time(run_time)
+		_update_difficulty_label()
+
+		# --- Slowdown basé sur le nombre de bulles (simple + perceptible)
+		bubble_load_smoothed = lerp(
+			bubble_load_smoothed,
+			bubble_load_factor,
+			1.0 - exp(-slowdown_smooth * delta)
 		)
 
-		# Atténuation du slow visuel quand le temps est bas (timescale seulement)
-		var fade := 1.0
-		if timescale_fade_start_seconds > 0.0:
-			fade = clamp(remaining_time / timescale_fade_start_seconds, 0.0, 1.0)
+		# Courbe pour rendre l'effet plus perceptible
+		var shaped := pow(clamp(bubble_load_smoothed, 0.0, 1.0), slowdown_curve_power)
 
-		var effective_pressure := pressure_factor_smoothed * fade
-		Engine.time_scale = lerp(1.0, min_timescale, effective_pressure)
+		# timescale final
+		Engine.time_scale = lerp(1.0, min_timescale, shaped)
 
-	# Score roulant
+		if show_timescale_debug and difficulty_value_label:
+			# Optionnel : affiche aussi le timescale dans le label de difficulté
+			# (ou remplace par un autre label si tu préfères)
+			pass
+
+	# --- Score roulant
 	var cur := int(display_score)
 	if cur != target_score:
 		var diff: float = abs(float(target_score) - float(cur))
@@ -95,19 +104,18 @@ func _process(delta: float) -> void:
 			score_value_label.text = str(int(display_score))
 
 
-func set_pressure_factor(f: float) -> void:
-	pressure_factor = clamp(f, 0.0, 1.0)
+# Le spawner appelle ça avec un facteur 0..1 basé sur le nombre de bulles
+func set_bubble_load_factor(f: float) -> void:
+	bubble_load_factor = clamp(f, 0.0, 1.0)
 
 
-func _get_timer_speed() -> float:
-	return lerp(1.0, min_timer_speed, pressure_factor_smoothed)
+func get_difficulty_factor() -> float:
+	return difficulty_multiplier
 
 
-func increment_score(value: int):
+func increment_score(value: int) -> void:
 	score += value
 	target_score = score
-
-	_add_time_from_score(value)
 
 	if score > ScoreManager.get_best_score():
 		ScoreManager.update_score(score)
@@ -115,77 +123,19 @@ func increment_score(value: int):
 			best_score_label.text = "%d" % ScoreManager.get_best_score()
 
 
-func _add_time_from_score(added_score: int) -> void:
-	if added_score <= 0:
-		return
-	if points_per_second <= 0.0:
-		return
-
-	# Base : mapping continu
-	var bonus := float(added_score) / points_per_second
-
-	# Late-game boost : plus il reste peu de temps, plus le bonus est grand
-	# remaining_time <= low_time_boost_start_seconds => multiplier va vers max_low_time_multiplier
-	if low_time_boost_start_seconds > 0.0 and max_low_time_multiplier > 1.0:
-		var t : float = clamp(1.0 - (remaining_time / low_time_boost_start_seconds), 0.0, 1.0)
-		var multiplier : float = lerp(1.0, max_low_time_multiplier, t)
-		bonus *= multiplier
-
-	# Plafond par pop (anti spam)
-	if max_bonus_seconds_per_pop > 0.0:
-		bonus = min(bonus, max_bonus_seconds_per_pop)
-
-	remaining_time += bonus
-
-	# Cap global (évite les runs infinis)
-	if max_remaining_time_cap > 0.0:
-		remaining_time = min(remaining_time, max_remaining_time_cap)
-
-	if timer_value_label:
-		timer_value_label.text = _format_time(remaining_time)
-
-
-func _start_timer():
-	timer = Timer.new()
-	timer.wait_time = 0.01
-	timer.one_shot = false
-	timer.connect("timeout", Callable(self, "_update_timer"))
-	add_child(timer)
-	timer.start()
-
-
-func _update_timer():
+func end_game():
 	if game_over:
 		return
 
-	remaining_time -= 0.01 * _get_timer_speed()
-
-	if remaining_time <= 0:
-		remaining_time = 0
-		end_game()
-
-	if timer_value_label:
-		timer_value_label.text = _format_time(remaining_time)
-
-
-func _format_time(time: float) -> String:
-	var seconds = int(time)
-	var centiseconds = int((time - seconds) * 100)
-	return "%02d:%02d" % [seconds, centiseconds]
-
-
-func end_game():
 	game_over = true
 	allow_restart = false
+
 	get_tree().paused = true
 	Engine.time_scale = 1.0
 
 	if game_over_label:
 		game_over_label.show()
 		game_over_label.text = "Game Over! Click to play again."
-
-	if timer:
-		timer.stop()
 
 	_create_restart_delay_timer(2.0)
 
@@ -220,3 +170,17 @@ func _allow_restart():
 func _input(event):
 	if event.is_action_pressed("quit"):
 		get_tree().quit()
+
+
+func _format_survival_time(t: float) -> String:
+	var seconds := int(floor(t))
+	var centiseconds := int(floor((t - float(seconds)) * 100.0))
+	return "%02d:%02d" % [seconds, centiseconds]
+
+
+func _update_difficulty_label() -> void:
+	if not difficulty_value_label:
+		return
+
+	var fmt := "%0." + str(max(difficulty_decimals, 0)) + "f"
+	difficulty_value_label.text = "x " + (fmt % difficulty_multiplier)
