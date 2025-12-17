@@ -37,10 +37,31 @@ func set_grow_multiplier(m: float) -> void:
 
 func set_risk_multiplier(m: float) -> void:
 	risk_multiplier = max(m, 1.0)
+	_update_label_and_value()
 
 
 func set_difficulty_multiplier(m: float) -> void:
 	difficulty_multiplier = max(m, 0.0)
+	_update_label_and_value()
+
+
+func set_collision_enabled(enabled: bool) -> void:
+	if area:
+		area.monitoring = enabled
+		area.monitorable = enabled
+	if collision_shape:
+		collision_shape.disabled = not enabled
+
+
+func get_world_radius() -> float:
+	if collision_shape and collision_shape.shape is SphereShape3D:
+		var sphere: SphereShape3D = collision_shape.shape as SphereShape3D
+		var gs: Vector3 = collision_shape.global_transform.basis.get_scale()
+		var max_axis: float = max(gs.x, max(gs.y, gs.z))
+		return sphere.radius * max_axis
+
+	var g: Vector3 = global_transform.basis.get_scale()
+	return 0.5 * max(g.x, max(g.y, g.z))
 
 
 func _process(delta: float) -> void:
