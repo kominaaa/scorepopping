@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://i2xdspqa0dfr"]
+
+[ext_resource type="Script" uid="uid://dqgfhp7ieqj2y" path="res://scripts/collision.gd" id="1_u8cmh"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_jtgvb"]
+radius = 1.0
+height = 2.0
+radial_segments = 12
+rings = 6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u8cmh"]
+shading_mode = 0
+albedo_color = Color(0.652613, 0.510053, 0.987027, 1)
+disable_receive_shadows = true
+
+[node name="Collision" type="Node3D"]
+script = ExtResource("1_u8cmh")
+
+[node name="BubbleMeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_jtgvb")
+skeleton = NodePath("")
+surface_material_override/0 = SubResource("StandardMaterial3D_u8cmh")

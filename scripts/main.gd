@@ -4,17 +4,22 @@ extends Node3D
 @export var score_value_label: Label
 @export var best_score_label: Label
 @export var difficulty_value_label: Label
-@export var game_over_label: Label
 @export var survival_time_label: Label
+
+# >>> UI Game Over : parent (avec script pop) + label (texte)
+@export var game_over_control: Control
+@export var game_over_label: Label
+
+@export var collision_marker_scene: PackedScene
 
 # --- Score "roulant"
 @export var base_roll_speed: float = 800.0
 @export var roll_factor: float = 0.12
 
 # --- Slowdown basé sur le nombre de bulles
-@export_range(0.05, 1.0, 0.01) var min_timescale: float = 0.35  # plus bas = plus visible
-@export var slowdown_smooth: float = 10.0                       # lissage
-@export var slowdown_curve_power: float = 1.8                   # >1 rend l'effet plus "prononcé"
+@export_range(0.05, 1.0, 0.01) var min_timescale: float = 0.35
+@export var slowdown_smooth: float = 10.0
+@export var slowdown_curve_power: float = 1.8
 @export var show_timescale_debug: bool = false
 
 # --- Difficulty (infinie) en multiplicateur
@@ -33,7 +38,6 @@ var allow_restart: bool = false
 var run_time: float = 0.0
 var difficulty_multiplier: float = 1.0
 
-# facteur envoyé par le spawner (0..1) : 0 = peu de bulles, 1 = beaucoup
 var bubble_load_factor: float = 0.0
 var bubble_load_smoothed: float = 0.0
 
@@ -55,8 +59,9 @@ func _ready():
 	if best_score_label:
 		best_score_label.text = "%d" % ScoreManager.get_best_score()
 
-	if game_over_label:
-		game_over_label.hide()
+	# >>> On cache le CONTROLE, pas juste le label
+	if game_over_control:
+		game_over_control.hide()
 
 	Engine.time_scale = 1.0
 	_update_difficulty_label()
@@ -64,7 +69,6 @@ func _ready():
 
 func _process(delta: float) -> void:
 	if not game_over:
-		# --- Difficulté infinie en multiplicateur
 		run_time += delta
 		var doubling: float = max(seconds_per_doubling, 0.001)
 		var growth_per_second := pow(2.0, 1.0 / doubling)
@@ -75,25 +79,15 @@ func _process(delta: float) -> void:
 			survival_time_label.text = _format_survival_time(run_time)
 		_update_difficulty_label()
 
-		# --- Slowdown basé sur le nombre de bulles (simple + perceptible)
 		bubble_load_smoothed = lerp(
 			bubble_load_smoothed,
 			bubble_load_factor,
 			1.0 - exp(-slowdown_smooth * delta)
 		)
 
-		# Courbe pour rendre l'effet plus perceptible
 		var shaped := pow(clamp(bubble_load_smoothed, 0.0, 1.0), slowdown_curve_power)
-
-		# timescale final
 		Engine.time_scale = lerp(1.0, min_timescale, shaped)
 
-		if show_timescale_debug and difficulty_value_label:
-			# Optionnel : affiche aussi le timescale dans le label de difficulté
-			# (ou remplace par un autre label si tu préfères)
-			pass
-
-	# --- Score roulant
 	var cur := int(display_score)
 	if cur != target_score:
 		var diff: float = abs(float(target_score) - float(cur))
@@ -104,7 +98,6 @@ func _process(delta: float) -> void:
 			score_value_label.text = str(int(display_score))
 
 
-# Le spawner appelle ça avec un facteur 0..1 basé sur le nombre de bulles
 func set_bubble_load_factor(f: float) -> void:
 	bubble_load_factor = clamp(f, 0.0, 1.0)
 
@@ -123,6 +116,27 @@ func increment_score(value: int) -> void:
 			best_score_label.text = "%d" % ScoreManager.get_best_score()
 
 
+# APPELÉ PAR LE SPAWNER : spawn marker + game over
+func trigger_game_over_at(pos: Vector3) -> void:
+	if game_over:
+		return
+
+	_spawn_collision_marker(pos)
+	end_game()
+
+
+func _spawn_collision_marker(pos: Vector3) -> void:
+	if collision_marker_scene == null:
+		return
+
+	var marker := collision_marker_scene.instantiate() as Node3D
+	if marker == null:
+		return
+
+	marker.global_position = pos
+	get_tree().current_scene.add_child(marker)
+
+
 func end_game():
 	if game_over:
 		return
@@ -130,12 +144,19 @@ func end_game():
 	game_over = true
 	allow_restart = false
 
+	# On met en pause (UI reste en PROCESS_MODE_ALWAYS)
 	get_tree().paused = true
 	Engine.time_scale = 1.0
 
+	# Texte
 	if game_over_label:
-		game_over_label.show()
 		game_over_label.text = "Game Over! Click to play again."
+
+	# >>> On montre le CONTROLE et on déclenche le pop
+	if game_over_control:
+		game_over_control.show()
+		if game_over_control.has_method("pop"):
+			game_over_control.call("pop")
 
 	_create_restart_delay_timer(2.0)
 

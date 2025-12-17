@@ -1,7 +1,7 @@
 extends Node3D
 
 signal bubble_destroyed(bubble: Node3D, bubble_base_value: int)
-signal collision_detected
+signal collision_detected(world_pos: Vector3)
 signal progress_updated(progress: float)
 
 @export var scale_rate: float = 1.0
@@ -97,8 +97,32 @@ func _update_label_and_value() -> void:
 
 
 func _on_area_entered(other_area: Area3D) -> void:
-	if other_area.get_parent() != self:
-		emit_signal("collision_detected")
+	var other_bubble := other_area.get_parent() as Node3D
+	if other_bubble == null or other_bubble == self:
+		return
+
+	# Calcul d’un point d’impact plausible (approx)
+	var a_center := global_position
+	var b_center := other_bubble.global_position
+
+	var dir := (b_center - a_center)
+	var dist := dir.length()
+	if dist < 0.0001:
+		emit_signal("collision_detected", a_center)
+		return
+
+	dir /= dist
+
+	var ra := get_world_radius()
+	var rb := 0.5
+	if other_bubble.has_method("get_world_radius"):
+		rb = float(other_bubble.call("get_world_radius"))
+
+	var pA := a_center + dir * ra
+	var pB := b_center - dir * rb
+	var contact_point := (pA + pB) * 0.5
+
+	emit_signal("collision_detected", contact_point)
 
 
 func _on_input_event(camera: Camera3D, event: InputEvent, click_position: Vector3, click_normal: Vector3, shape_idx: int) -> void:

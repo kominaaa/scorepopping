@@ -1,9 +1,10 @@
-[gd_scene load_steps=21 format=4 uid="uid://f3j6pq47rjkq"]
+[gd_scene load_steps=22 format=4 uid="uid://f3j6pq47rjkq"]
 
 [ext_resource type="Script" uid="uid://endwttv4eiji" path="res://scripts/main.gd" id="1_mnu6u"]
 [ext_resource type="PackedScene" uid="uid://ber4mr242hy4d" path="res://scenes/bubble.tscn" id="1_nwdim"]
 [ext_resource type="Script" uid="uid://cn1myo6rwkfr1" path="res://scripts/logo_anim.gd" id="2_0akuw"]
 [ext_resource type="Script" uid="uid://boigifvxo73ft" path="res://scripts/bubble_spawner.gd" id="2_fwp22"]
+[ext_resource type="PackedScene" uid="uid://i2xdspqa0dfr" path="res://scenes/collision.tscn" id="2_tipki"]
 [ext_resource type="PackedScene" uid="uid://wejovet6gbnc" path="res://scenes/game_interface.tscn" id="4_yko0o"]
 [ext_resource type="AudioStream" uid="uid://dm3ai0roexvim" path="res://audio/game_over_pop.wav" id="5_a5248"]
 [ext_resource type="Script" uid="uid://datkgm3c671kr" path="res://scripts/cursor.gd" id="7_ri2c5"]
@@ -145,14 +146,16 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_6cdgr")
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "best_score_label", "difficulty_value_label", "game_over_label")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("camera", "score_value_label", "best_score_label", "difficulty_value_label", "game_over_control", "game_over_label")]
 process_mode = 3
 script = ExtResource("1_mnu6u")
 camera = NodePath("Camera3D")
 score_value_label = NodePath("CanvasLayer/GameInterface/ScoreValueLabel")
 best_score_label = NodePath("CanvasLayer/GameInterface/BestScoreControl/BestScoreValueLabel")
 difficulty_value_label = NodePath("CanvasLayer/GameInterface/DifficultyControl/DifficultyValueLabel")
-game_over_label = NodePath("CanvasLayer/GameInterface/GameOverLabel")
+game_over_control = NodePath("CanvasLayer/GameInterface/GameOverControl")
+game_over_label = NodePath("CanvasLayer/GameInterface/GameOverControl/GameOverLabel")
+collision_marker_scene = ExtResource("2_tipki")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -203,6 +206,6 @@ camera = NodePath("../Camera3D")
 cursor = NodePath(".")
 
 [node name="CursorMeshInstance3D" type="MeshInstance3D" parent="Cursor"]
-transform = Transform3D(-0.5, -7.5904e-09, -4.30473e-08, 0, 0.492404, -0.0868241, 4.37114e-08, -0.0868241, -0.492404, 0, 0, 0)
+transform = Transform3D(-0.5, 0, 4.37114e-08, 0, 0.5, 0, -4.37114e-08, 0, -0.5, 0, 0, 0)
 mesh = SubResource("ArrayMesh_lvf5n")
 skeleton = NodePath("")

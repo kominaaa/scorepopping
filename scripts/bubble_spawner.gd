@@ -428,6 +428,8 @@ func _spawn_one_bubble() -> void:
 
 		if bubble.has_signal("bubble_destroyed"):
 			bubble.connect("bubble_destroyed", Callable(self, "_on_bubble_destroyed"))
+
+		# >>> IMPORTANT : on attend une position
 		if bubble.has_signal("collision_detected"):
 			bubble.connect("collision_detected", Callable(self, "_on_bubble_collision"))
 
@@ -499,9 +501,14 @@ func _compute_risk_multiplier(bubble: Node3D) -> float:
 	return lerp(1.0, risk_max_multiplier, (sum / float(k)))
 
 
-func _on_bubble_collision() -> void:
-	if main_scene and main_scene.has_method("end_game"):
+# >>> Reçoit une position (depuis Bubble.gd ou depuis le check manuel)
+func _on_bubble_collision(pos: Vector3) -> void:
+	# Appel “propre” si tu as ajouté trigger_game_over_at dans ton GameManager
+	if main_scene and main_scene.has_method("trigger_game_over_at"):
+		main_scene.trigger_game_over_at(pos)
+	elif main_scene and main_scene.has_method("end_game"):
 		main_scene.end_game()
+
 	if end_sound:
 		end_sound.play()
 
@@ -514,7 +521,19 @@ func _check_collisions() -> void:
 			if a and b and not a.is_queued_for_deletion() and not b.is_queued_for_deletion():
 				var ra: float = _get_radius(a)
 				var rb: float = _get_radius(b)
-				var d: float = a.global_position.distance_to(b.global_position)
+				var dvec: Vector3 = b.global_position - a.global_position
+				var d: float = dvec.length()
+
 				if d < (ra + rb + collision_margin):
-					_on_bubble_collision()
+					# Calcul du point d'impact (même logique que Bubble.gd)
+					if d < 0.0001:
+						_on_bubble_collision(a.global_position)
+						return
+
+					var dir := dvec / d
+					var pA := a.global_position + dir * ra
+					var pB := b.global_position - dir * rb
+					var contact_point := (pA + pB) * 0.5
+
+					_on_bubble_collision(contact_point)
 					return
